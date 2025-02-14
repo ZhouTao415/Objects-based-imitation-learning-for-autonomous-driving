@@ -2,83 +2,123 @@ import os
 import json
 import numpy as np
 import pandas as pd
-from torch.utils.data import Dataset
+import torch
+from torch.utils.data import Dataset, DataLoader
+from torch.nn.utils.rnn import pad_sequence
+import torch.nn.functional as F
 
 class DrivingDataset(Dataset):
-    def __init__(self, data_dir, sequence_name, transform=None):
-        """
-        初始化数据集
-
-        参数:
-            data_dir: 数据根目录路径
-            sequence_name: 场景名称，对应 data/objects/sequence_name、data/waypoints/sequence_name 下的文件
-            transform: 可选的预处理方法
-        """
-        self.data_dir = data_dir
-        self.sequence_name = sequence_name
-        self.transform = transform
+    def __init__(self, data_root):
+        self.data_root = data_root
+        self.sequences = os.listdir(os.path.join(data_root, 'objects'))
+        self.boundary_names = self._get_boundary_names()
+        self.num_boundary_types = len(self.boundary_names)
+        self.boundary_to_idx = {name: i for i, name in enumerate(self.boundary_names)}
+        self.samples = self._load_samples()
         
-        # 加载 IMU 数据
-        imu_path = os.path.join(data_dir, 'objects', sequence_name, 'imu_data.json')
-        with open(imu_path, 'r') as f:
-            self.imu_data = json.load(f)
-        
-        # 加载车道数据
-        lanes_path = os.path.join(data_dir, 'objects', sequence_name, 'cametra_interface_lanes_output.csv')
-        self.lanes_data = pd.read_csv(lanes_path)
-        
-        # 加载对象数据
-        objects_path = os.path.join(data_dir, 'objects', sequence_name, 'cametra_interface_output.csv')
-        self.objects_data = pd.read_csv(objects_path)
-        
-        # 加载航点数据
-        waypoints_path = os.path.join(data_dir, 'waypoints', sequence_name, 'waypoints.npy')
-        self.waypoints = np.load(waypoints_path)
-        
-        # 以 IMU 数据中的时间戳作为完整时间戳列表（假设 JSON 的 key 都为字符串的时间戳）
-        # 根据需要转换为数字或保持字符串格式，这里假设时间戳可以直接比较
-        self.timestamps = sorted(self.imu_data.keys(), key=lambda x: int(x))
+    def _get_boundary_names(self):
+        boundary_names = set()
+        for seq in self.sequences:
+            lanes_path = os.path.join(self.data_root, 'objects', seq, 'cametra_interface_lanes_output.csv')
+            df = pd.read_csv(lanes_path)
+            boundary_names.update(df['boundary_name'].unique())
+        return sorted(list(boundary_names))
+    
+    def _load_samples(self):
+        samples = []
+        for seq in self.sequences:
+            # Load IMU data
+            imu_path = os.path.join(self.data_root, 'objects', seq, 'imu_data.json')
+            with open(imu_path, 'r') as f:
+                imu_data = json.load(f)
+            # Load waypoints
+            waypoints_path = os.path.join(self.data_root, 'waypoints', seq, 'waypoints.npy')
+            waypoints = np.load(waypoints_path)
+            # Load objects
+            objects_path = os.path.join(self.data_root, 'objects', seq, 'cametra_interface_output.csv')
+            df_objects = pd.read_csv(objects_path)
+            objects_grouped = df_objects.groupby('name')
+            # Load lanes
+            lanes_path = os.path.join(self.data_root, 'objects', seq, 'cametra_interface_lanes_output.csv')
+            df_lanes = pd.read_csv(lanes_path)
+            lanes_grouped = df_lanes.groupby('frame_id')
+            # Process each timestamp
+            timestamps = sorted(imu_data.keys(), key=lambda x: float(x))
+            for i, ts in enumerate(timestamps):
+                # IMU
+                imu = np.array([imu_data[ts]['vf']], dtype=np.float32)
+                # Objects
+                if ts in objects_grouped.groups:
+                    objs = objects_grouped.get_group(ts)
+                    obj_features = objs[['lat_dist', 'long_dist', 'abs_vel_x', 'abs_vel_z']].values.astype(np.float32)
+                else:
+                    obj_features = np.zeros((0, 4), dtype=np.float32)
+                # Lanes
+                if ts in lanes_grouped.groups:
+                    lanes = lanes_grouped.get_group(ts)
+                    lane_features = []
+                    for _, row in lanes.iterrows():
+                        one_hot = np.zeros(self.num_boundary_types)
+                        if row['boundary_name'] in self.boundary_to_idx:
+                            one_hot[self.boundary_to_idx[row['boundary_name']]] = 1
+                        poly = [row['polynomial_0'], row['polynomial_1'], row['polynomial_2']]
+                        lane_features.append(np.concatenate([one_hot, poly]))
+                    lane_features = np.array(lane_features, dtype=np.float32)
+                else:
+                    lane_features = np.zeros((0, self.num_boundary_types + 3), dtype=np.float32)
+                # Waypoints
+                wp = waypoints[i]
+                samples.append({
+                    'objects': obj_features,
+                    'lanes': lane_features,
+                    'imu': imu,
+                    'waypoints': wp
+                })
+        return samples
     
     def __len__(self):
-        return len(self.timestamps)
+        return len(self.samples)
     
     def __getitem__(self, idx):
-        # 获取对应时间戳
-        timestamp = self.timestamps[idx]
-        
-        # 从 IMU 数据中获取当前帧的特征（如 vf 等）
-        imu_features = self.imu_data[timestamp]
-        
-        # 获取对应时间戳的车道数据，CSV 中 frame_id 记录时间戳（注意类型转换）
-        lanes = self.lanes_data[self.lanes_data['frame_id'] == int(timestamp)]
-        # 如果没有车道数据，则返回空列表或做相应处理
-        lanes_features = lanes.to_dict(orient='records') if not lanes.empty else []
-        
-        # 获取对应时间戳的对象数据，CSV 中的 name 对应时间戳
-        objects = self.objects_data[self.objects_data['name'] == int(timestamp)]
-        objects_features = objects.to_dict(orient='records') if not objects.empty else []
-        
-        # 获取航点数据
-        # 假设 waypoints.npy 中的第 idx 行对应时间戳为 self.timestamps[idx]
-        waypoint = self.waypoints[idx]  # shape (4, 2)
-        
-        sample = {
-            'timestamp': timestamp,
-            'imu': imu_features,
-            'lanes': lanes_features,
-            'objects': objects_features,
-            'waypoints': waypoint
-        }
-        
-        if self.transform:
-            sample = self.transform(sample)
-        
-        return sample
+        return self.samples[idx]
 
-# 下面是一个简单的测试代码
-if __name__ == '__main__':
-    # 假设数据根目录为 "./data" 且序列名称为 "sequence_name"
-    dataset = DrivingDataset(data_dir='/home/tao/Documents/autobrains_home_assignment/objects_assignment/', sequence_name='1690794336000052_20230731090536-00-00')
-    print("数据集大小:", len(dataset))
-    sample = dataset[0]
-    print("第一个样本:", sample)
+def collate_fn(batch):
+    objects = [torch.tensor(sample['objects']) for sample in batch]
+    lanes = [torch.tensor(sample['lanes']) for sample in batch]
+    imu = torch.tensor([sample['imu'] for sample in batch], dtype=torch.float32)
+    waypoints = torch.tensor([sample['waypoints'] for sample in batch], dtype=torch.float32)
+    
+    # Pad objects
+    max_objects = max(o.shape[0] for o in objects)
+    padded_objects = []
+    objects_mask = []
+    for obj in objects:
+        padding = (0, 0, 0, max_objects - obj.shape[0])
+        padded = F.pad(obj, padding)
+        padded_objects.append(padded)
+        mask = [1] * obj.shape[0] + [0] * (max_objects - obj.shape[0])
+        objects_mask.append(mask)
+    padded_objects = torch.stack(padded_objects)
+    objects_mask = torch.tensor(objects_mask, dtype=torch.float32)
+    
+    # Pad lanes
+    max_lanes = max(l.shape[0] for l in lanes)
+    padded_lanes = []
+    lanes_mask = []
+    for ln in lanes:
+        padding = (0, 0, 0, max_lanes - ln.shape[0])
+        padded = F.pad(ln, padding)
+        padded_lanes.append(padded)
+        mask = [1] * ln.shape[0] + [0] * (max_lanes - ln.shape[0])
+        lanes_mask.append(mask)
+    padded_lanes = torch.stack(padded_lanes)
+    lanes_mask = torch.tensor(lanes_mask, dtype=torch.float32)
+    
+    return {
+        'objects': padded_objects,
+        'lanes': padded_lanes,
+        'imu': imu,
+        'waypoints': waypoints,
+        'objects_masFk': objects_mask,
+        'lanes_mask': lanes_mask
+    }
