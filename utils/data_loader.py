@@ -11,7 +11,7 @@ class DrivingDataset(Dataset):
         """
         data_root: 数据根目录，假设目录结构为：
           data/
-            ├── images/
+            ├── images/sequence_name/
             ├── waypoints/sequence_name/waypoints.npy
             └── objects/sequence_name/ (包含 cametra_interface_output.csv, cametra_interface_lanes_output.csv, imu_data.json)
         """

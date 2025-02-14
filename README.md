@@ -18,4 +18,5 @@ pip3 install PyYAML
 numpy
 pandas
 tensorboard
+matplotlib
 ```

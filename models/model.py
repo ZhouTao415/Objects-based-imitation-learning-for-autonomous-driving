@@ -45,60 +45,56 @@ class WaypointPredictor(nn.Module):
         # 步长（每个 waypoint）嵌入
         self.step_embedding = nn.Embedding(4, step_embedding_size)
         
-        # GRU cell 用于生成 waypoints
-        self.gru_cell = nn.GRUCell(step_embedding_size, context_size)
+        # LSTM cell 用于生成 waypoints
+        self.lstm_cell = nn.LSTMCell(step_embedding_size, context_size)
         
         # 隐状态到 2D waypoint 的映射
         self.waypoint_predictor = nn.Linear(context_size, 2)
         
     def forward(self, objects, lanes, imu, objects_mask, lanes_mask):
-        # objects: (B, max_N, 4)
-        # lanes: (B, max_M, 6)
-        # imu: (B, 1)
-        
         B = objects.shape[0]
         
-        # 对 objects 部分
+        # 处理 Objects
         if objects.shape[1] == 0:
-            # 如果当前 batch 中所有样本都没有 objects，
-            # 则直接构造一个全零的对象聚合向量，尺寸为 (B, obj_embedding_size)
             obj_agg = torch.zeros(B, self.object_mlp[-1].out_features, device=objects.device)
         else:
             B, max_N, _ = objects.shape
             obj_flat = objects.view(B * max_N, -1)
-            obj_emb_flat = self.object_mlp(obj_flat)  # (B*max_N, 32)
-            obj_emb = obj_emb_flat.view(B, max_N, -1)   # (B, max_N, 32)
+            obj_emb_flat = self.object_mlp(obj_flat)
+            obj_emb = obj_emb_flat.view(B, max_N, -1)
             obj_emb = obj_emb * objects_mask.unsqueeze(-1)
             obj_agg = torch.sum(obj_emb, dim=1) / (torch.sum(objects_mask, dim=1, keepdim=True) + 1e-6)
         
-        # 对 lanes 部分
+        # 处理 Lanes
         if lanes.shape[1] == 0:
             lane_agg = torch.zeros(B, self.lane_mlp[-1].out_features, device=lanes.device)
         else:
             B, max_M, _ = lanes.shape
             lane_flat = lanes.view(B * max_M, -1)
-            lane_emb_flat = self.lane_mlp(lane_flat)  # (B*max_M, 32)
+            lane_emb_flat = self.lane_mlp(lane_flat)
             lane_emb = lane_emb_flat.view(B, max_M, -1)
             lane_emb = lane_emb * lanes_mask.unsqueeze(-1)
             lane_agg = torch.sum(lane_emb, dim=1) / (torch.sum(lanes_mask, dim=1, keepdim=True) + 1e-6)
         
         # IMU 编码
-        imu_emb = self.imu_mlp(imu)  # (B, 16)
+        imu_emb = self.imu_mlp(imu)
         
-        # 融合得到上下文向量
+        # 生成上下文向量
         context = torch.cat([obj_agg, lane_agg, imu_emb], dim=1)
-        context = self.context_mlp(context)  # (B, 128)
+        context = self.context_mlp(context)
         
-        # 用 GRUCell 依次生成 4 个 waypoint
-        h = context  # 初始隐状态
+        # 初始化 LSTM 的隐藏状态和细胞状态
+        h = context  # 初始隐藏状态
+        c = torch.zeros_like(h)  # 初始细胞状态
+        
         waypoints = []
         for step in range(4):
             step_idx = torch.tensor([step] * B, device=objects.device)
-            step_emb = self.step_embedding(step_idx)  # (B, step_embedding_size)
-            h = self.gru_cell(step_emb, h)  # (B, 128)
-            wp = self.waypoint_predictor(h)  # (B, 2)
+            step_emb = self.step_embedding(step_idx)
+            # LSTM 前向传播
+            h, c = self.lstm_cell(step_emb, (h, c))
+            wp = self.waypoint_predictor(h)
             waypoints.append(wp)
         
-        # 将 4 个 waypoint 堆叠起来，形状为 (B, 4, 2)
-        waypoints = torch.stack(waypoints, dim=1)  # (B, 4, 2)
+        waypoints = torch.stack(waypoints, dim=1)
         return waypoints
