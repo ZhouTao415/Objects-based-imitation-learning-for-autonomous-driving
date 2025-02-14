@@ -1,23 +1,24 @@
 import torch
 from torch.utils.data import DataLoader
-from models.model import WaypointPredictor
-from utils.data_loader import DrivingDataset, collate_fn
 import torch.optim as optim
 import torch.nn as nn
 
-def train(data_root, batch_size=8, num_epochs=50, lr=1e-3):
+from models.model import WaypointPredictor
+from utils.data_loader import DrivingDataset, collate_fn
+
+def train(data_root, batch_size=8, num_epochs=200, lr=1e-3):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    # Dataset and DataLoader
+    # 构建数据集与 DataLoader
     dataset = DrivingDataset(data_root)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
     
-    # Model
+    # 初始化模型
     model = WaypointPredictor().to(device)
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
     
-    # Training loop
+    # 训练循环
     for epoch in range(num_epochs):
         total_loss = 0.0
         for batch in dataloader:
@@ -37,8 +38,11 @@ def train(data_root, batch_size=8, num_epochs=50, lr=1e-3):
             total_loss += loss.item()
         
         avg_loss = total_loss / len(dataloader)
-        print(f'Epoch {epoch+1}, Loss: {avg_loss:.4f}')
-
+        print(f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}")
+    
+    # 保存模型
+    torch.save(model.state_dict(), "output/waypoint_predictor.pth")
+    
 if __name__ == '__main__':
-    data_root = 'path/to/data'  # Update this path
+    data_root = "./data"  # 请根据实际数据路径修改
     train(data_root)

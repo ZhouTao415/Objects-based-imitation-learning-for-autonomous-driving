@@ -17,4 +17,5 @@ pip3 install PyYAML
 ```bash
 numpy
 pandas
+tensorboard
 ```
