@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 加载数据
-pred = np.load("/home/tao/Documents/autobrains_home_assignment/predictions/pred_waypoints_20250214-140358.npy")
-true = np.load("/home/tao/Documents/autobrains_home_assignment/data/waypoints/1690794336000052_20230731090536-00-00/waypoints.npy")
-# true = np.load("/home/tao/Documents/autobrains_home_assignment/data/waypoints/1692632429000129_20230821154029-00-00/waypoints.npy")
+pred = np.load("/home/tao/Documents/autobrains_home_assignment/predictions/pred_waypoints_20250214-152324.npy")
+# true = np.load("/home/tao/Documents/autobrains_home_assignment/data/waypoints/1690794336000052_20230731090536-00-00/waypoints.npy")
+true = np.load("/home/tao/Documents/autobrains_home_assignment/data/waypoints/1692632429000129_20230821154029-00-00/waypoints.npy")
 
 import time
 

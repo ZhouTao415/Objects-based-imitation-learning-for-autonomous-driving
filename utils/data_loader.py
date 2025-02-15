@@ -107,45 +107,54 @@ def collate_fn(batch):
     将 batch 中每个样本里的 objects 与 lanes 用 0 padding 到同一尺寸，并生成 mask。
     返回一个字典，包含 padded tensors 及 mask。
     """
-    # 提取各样本
-    objects_list = [torch.tensor(sample['objects']) for sample in batch]
-    lanes_list = [torch.tensor(sample['lanes']) for sample in batch]
-    imu = torch.tensor(np.array([sample['imu'] for sample in batch]), dtype=torch.float32)
-    waypoints = torch.tensor(np.array([sample['waypoints'] for sample in batch]), dtype=torch.float32)
+    # 利用 from_numpy 转换
+    objects_list = [torch.from_numpy(sample['objects']) for sample in batch]
+    lanes_list = [torch.from_numpy(sample['lanes']) for sample in batch]
+    imu = torch.from_numpy(np.array([sample['imu'] for sample in batch])).float()
+    waypoints = torch.from_numpy(np.array([sample['waypoints'] for sample in batch])).float()
     
-    # 对 objects 进行 padding
+    # 计算所有样本中 objects 和 lanes 的最大行数
     max_objects = max(o.shape[0] for o in objects_list)
+    max_lanes = max(l.shape[0] for l in lanes_list)
+    
     padded_objects = []
     objects_mask = []
     for o in objects_list:
         num_obj = o.shape[0]
-        pad = (0, 0, 0, max_objects - num_obj)
-        padded = F.pad(o, pad, "constant", 0)
+        # 如果为空，则直接创建一个空 tensor
+        if num_obj == 0:
+            padded = torch.zeros(max_objects, o.shape[1] if o.ndim > 1 else 1)
+            mask = [0] * max_objects
+        else:
+            pad = (0, 0, 0, max_objects - num_obj)
+            padded = F.pad(o, pad, "constant", 0)
+            mask = [1] * num_obj + [0] * (max_objects - num_obj)
         padded_objects.append(padded)
-        mask = [1] * num_obj + [0] * (max_objects - num_obj)
         objects_mask.append(mask)
     padded_objects = torch.stack(padded_objects)
     objects_mask = torch.tensor(objects_mask, dtype=torch.float32)
     
-    # 对 lanes 进行 padding
-    max_lanes = max(l.shape[0] for l in lanes_list)
     padded_lanes = []
     lanes_mask = []
     for ln in lanes_list:
         num_ln = ln.shape[0]
-        pad = (0, 0, 0, max_lanes - num_ln)
-        padded = F.pad(ln, pad, "constant", 0)
+        if num_ln == 0:
+            padded = torch.zeros(max_lanes, ln.shape[1] if ln.ndim > 1 else 1)
+            mask = [0] * max_lanes
+        else:
+            pad = (0, 0, 0, max_lanes - num_ln)
+            padded = F.pad(ln, pad, "constant", 0)
+            mask = [1] * num_ln + [0] * (max_lanes - num_ln)
         padded_lanes.append(padded)
-        mask = [1] * num_ln + [0] * (max_lanes - num_ln)
         lanes_mask.append(mask)
     padded_lanes = torch.stack(padded_lanes)
     lanes_mask = torch.tensor(lanes_mask, dtype=torch.float32)
     
     return {
-        'objects': padded_objects,      # (B, max_N, 4)
-        'lanes': padded_lanes,            # (B, max_M, 6)
+        'objects': padded_objects,      # (B, max_objects, 4)
+        'lanes': padded_lanes,            # (B, max_lanes, 6)
         'imu': imu,                     # (B, 1)
         'waypoints': waypoints,         # (B, 4, 2)
-        'objects_mask': objects_mask,   # (B, max_N)
-        'lanes_mask': lanes_mask        # (B, max_M)
+        'objects_mask': objects_mask,   # (B, max_objects)
+        'lanes_mask': lanes_mask        # (B, max_lanes)
     }
