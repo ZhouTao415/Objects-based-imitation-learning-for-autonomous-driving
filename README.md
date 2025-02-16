@@ -19,5 +19,5 @@ numpy
 pandas
 tensorboard
 matplotlib
-setuptools
+transformers
 ```

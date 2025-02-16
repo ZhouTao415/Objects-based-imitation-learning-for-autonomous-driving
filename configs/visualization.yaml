@@ -1,0 +1,12 @@
+device: "cuda"           # 或 "cpu"
+checkpoint_path: "best_model.pth"
+
+# 模型相关配置
+obj_dim: 4               # 对象特征维度（例如：lat_dist, long_dist, abs_vel_x, abs_vel_z）
+lane_dim: 13             # 车道数据每行的维度（one-hot编码长度 + 多项式系数数目）
+imu_dim: 1               # IMU 数据维度，这里使用 'vf'
+embed_dim: 32            # Transformer/MLP 的嵌入维度
+num_heads: 4             # Transformer 多头注意力的头数
+ff_dim: 64               # Transformer 前馈网络的隐藏层维度
+num_layers: 2            # Transformer 编码器的层数
+hidden_dim: 64           # RNN 解码器的隐藏层维度

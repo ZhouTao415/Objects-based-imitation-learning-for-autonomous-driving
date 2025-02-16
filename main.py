@@ -6,15 +6,11 @@ from torch.utils.data import DataLoader
 from imitationLearning.data_loader.data_loader import DrivingDataset, ref_collate_fn
 from imitationLearning.models.transformer_rnn_model import TransformerRNNModel
 from imitationLearning.trainers.il_behaviour_cloner import BehaviourCloner
-from imitationLearning.utils.utils import make_abs_path
+from imitationLearning.utils.utils import make_abs_path, load_config
 
 # Create absolute paths for key data directories
 DATA_PATH = make_abs_path(__file__, "data")
 
-def load_config(config_path="configs/config.yaml"):
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
-    return config
 
 def main():
     config = load_config("configs/config.yaml")
