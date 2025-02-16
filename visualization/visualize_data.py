@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 
 # Import your project modules
-from imitationLearning.data_loader.data_lodaer import DrivingDataset
+from imitationLearning.data_loader.data_loader import DrivingDataset
 from imitationLearning.utils.utils import make_abs_path
 
 # Create absolute paths for key data directories

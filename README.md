@@ -19,4 +19,5 @@ numpy
 pandas
 tensorboard
 matplotlib
+setuptools
 ```

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from imitationLearning.data_loader.data_lodaer import DrivingDataset
+from imitationLearning.data_loader.data_loader import DrivingDataset
 
 # from data_loader.data_loader import DrivingDataset
 from imitationLearning.utils.utils import make_abs_path

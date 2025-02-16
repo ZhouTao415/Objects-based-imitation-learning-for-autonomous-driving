@@ -45,7 +45,7 @@ class DrivingDataset(Dataset):
             lanes_grouped = df_lanes.groupby('frame_id')
             
             # traversal all the timestamps (based on the IMU data)
-            timestamps = sorted(imu_data.key(), key = lambda x : float(x))
+            timestamps = sorted(list(imu_data.keys()), key=lambda x: float(x))
             
             for i, ts in enumerate(timestamps):
                 # IMU data: features 'vf'
@@ -101,15 +101,15 @@ class DrivingDataset(Dataset):
             'waypoints': sample['waypoints']
         }
         
-    def ref_collate_fn(batch):
-        """Align padding strategy"""
-        objects = pad_sequence([torch.tensor(x['objects']) for x in batch], batch_first=True)
-        lanes = pad_sequence([torch.tensor(x['lanes']) for x in batch], batch_first=True)
-        imu = torch.stack([torch.tensor(x['imu']) for x in batch])
-        waypoints = torch.stack([torch.tensor(x['waypoints']) for x in batch])
-        return {
-            'objects': objects,
-            'lanes': lanes,
-            'imu': imu,
-            'waypoints': waypoints
-        }
+def ref_collate_fn(batch):
+    """Align padding strategy"""
+    objects = pad_sequence([torch.tensor(x['objects']) for x in batch], batch_first=True)
+    lanes = pad_sequence([torch.tensor(x['lanes']) for x in batch], batch_first=True)
+    imu = torch.stack([torch.tensor(x['imu']) for x in batch])
+    waypoints = torch.stack([torch.tensor(x['waypoints']) for x in batch])
+    return {
+        'objects': objects,
+        'lanes': lanes,
+        'imu': imu,
+        'waypoints': waypoints
+    }
