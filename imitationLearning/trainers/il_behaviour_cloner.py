@@ -1,6 +1,8 @@
 import os
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
+import numpy as np
 
 class AverageMeter:
     def __init__(self):
@@ -27,6 +29,12 @@ class BehaviourCloner:
         self.best_loss = float("inf")
         self.epochs = config["epochs"]
 
+        # 用于记录每个 epoch 的训练和验证 loss，用于后续绘图
+        self.epoch_losses = []
+        self.val_epoch_losses = []
+        # 保存 loss 曲线的路径（可根据需要修改）
+        self.loss_plot_path = os.path.join(config.get("plots_path", "."), "loss.png")
+
     def train(self):
         for epoch in range(self.epochs):
             self.model.train()
@@ -34,22 +42,28 @@ class BehaviourCloner:
             for batch in self.train_loader:
                 obj = batch['objects'].to(self.config["device"])
                 lanes = batch['lanes'].to(self.config["device"])
+                lane_mask = batch['lane_mask'].to(self.config["device"])
                 imu = batch['imu'].to(self.config["device"])
                 waypoints = batch['waypoints'].to(self.config["device"])
 
                 self.optimizer.zero_grad()
-                output = self.model(obj, lanes, imu)
+                output = self.model(obj, lanes, lane_mask, imu)
                 loss = self.criterion(output, waypoints)
                 loss.backward()
                 self.optimizer.step()
                 train_meter.update(loss.item(), n=obj.size(0))
             print(f"Epoch {epoch+1}/{self.epochs}, Train Loss: {train_meter.avg:.4f}")
+            self.epoch_losses.append(train_meter.avg)
 
             val_loss = self.validate()
+            self.val_epoch_losses.append(val_loss)
             if val_loss < self.best_loss:
                 self.best_loss = val_loss
                 torch.save(self.model.state_dict(), self.config["checkpoint_path"])
                 print("Model saved!")
+
+        # 训练结束后进行 loss 曲线绘制
+        self.plot_loss()
 
     def validate(self):
         self.model.eval()
@@ -58,10 +72,24 @@ class BehaviourCloner:
             for batch in self.valid_loader:
                 obj = batch['objects'].to(self.config["device"])
                 lanes = batch['lanes'].to(self.config["device"])
+                lane_mask = batch['lane_mask'].to(self.config["device"])
                 imu = batch['imu'].to(self.config["device"])
                 waypoints = batch['waypoints'].to(self.config["device"])
-                output = self.model(obj, lanes, imu)
+                output = self.model(obj, lanes, lane_mask, imu)
                 loss = self.criterion(output, waypoints)
                 val_meter.update(loss.item(), n=obj.size(0))
         print(f"Validation Loss: {val_meter.avg:.4f}")
         return val_meter.avg
+
+    def plot_loss(self):
+        epochs = np.arange(1, self.epochs + 1)
+        plt.figure()
+        plt.plot(epochs, self.epoch_losses, label="Train Loss")
+        plt.plot(epochs, self.val_epoch_losses, label="Validation Loss")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title("Loss vs. Epoch")
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(self.loss_plot_path)
+        plt.show()
