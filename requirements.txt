@@ -1,0 +1,11 @@
+torch
+torchvision
+torchaudio
+numpy
+pandas
+tensorboard
+matplotlib
+transformers
+opencv-python
+typeguard
+PyYAML
