@@ -2,18 +2,15 @@ import os
 import json
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
-from torch.utils.data import DataLoader
 import matplotlib.gridspec as gridspec
 
-# Import your project modules
-from imitationLearning.data_loader.data_loader import DrivingDataset
 from imitationLearning.utils.utils import make_abs_path
 
 # Create absolute paths for key data directories
-WAYPOINTS_PATH = make_abs_path(__file__, "../data/waypoints")
-OBJECTS_PATH = make_abs_path(__file__, "../data/objects")
-IMAGE_PATH = make_abs_path(__file__, "../data/images")
+WAYPOINTS_PATH = make_abs_path(__file__, "../../../data/waypoints")
+OBJECTS_PATH = make_abs_path(__file__, "../../../data/objects")
+IMAGE_PATH = make_abs_path(__file__, "../../../data/images")
+OUTPUT_PATH = make_abs_path(__file__, "../../../output")
 
 def visualize_waypoints(scene: str, fig, gs) -> None:
     """
@@ -121,8 +118,11 @@ def main():
     """
     
     # 创建 output 目录
-    output_dir = "output"
+    output_dir = OUTPUT_PATH
     os.makedirs(output_dir, exist_ok=True)  # 确保 output 目录存在
+    if not os.path.exists(output_dir):
+        print(f"Error: Output directory {output_dir} was not created successfully!")
+
     
     # 获取所有场景
     scenes = os.listdir(WAYPOINTS_PATH)
@@ -146,7 +146,7 @@ def main():
 
         # ======== 3. 保存图片到 `output` 目录 ========
         save_path = os.path.join(output_dir, f"{scene}_visualization.png")
-        # plt.savefig(save_path, dpi=300)  # 高分辨率保存
+        plt.savefig(save_path, dpi=300)  # 高分辨率保存
         print(f"Saved visualization: {save_path}")
 
         # 调整布局 & 显示

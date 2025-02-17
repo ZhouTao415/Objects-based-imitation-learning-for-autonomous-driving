@@ -10,6 +10,8 @@ from imitationLearning.data_loader.data_loader import DrivingDataset, ref_collat
 from imitationLearning.models.transformer_rnn_model import TransformerRNNModel
 from imitationLearning.utils.utils import make_abs_path, load_config
 
+DATA_PATH = make_abs_path(__file__, "../../../data")
+
 def convert_tensor_to_numpy(tensor):
     return tensor.detach().cpu().numpy()
 
@@ -181,7 +183,7 @@ def main():
     config = load_config("configs/visualization.yaml")
     device = config["device"]
 
-    data_root = make_abs_path(__file__, "../data")
+    data_root = DATA_PATH
     dataset = DrivingDataset(data_root)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=False, collate_fn=ref_collate_fn)
 
@@ -190,7 +192,7 @@ def main():
     # 读取 plots_path，默认保存到当前目录
     plots_path = config.get("plots_path", "./output")
     os.makedirs(plots_path, exist_ok=True)
-    save_path = os.path.join(plots_path, "trajectory_visualization.png")
+    save_path = os.path.join(plots_path, "waypoints_visualization.png")
 
     visualize_model_output(model, dataloader, device, save_path)
 
