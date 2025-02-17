@@ -191,8 +191,9 @@ def main():
     model = load_model(config)
 
     # 读取 `plots_path`，默认保存到当前目录
-    plots_path = config.get("plots_path", ".")
-    save_path = os.path.join(plots_path, "trajectory_visualization.png")
+    plots_path = config.get("plots_path", "./output")
+    os.makedirs(plots_path, exist_ok=True)
+    save_path = os.path.join(plots_path, "traj  ectory_visualization.png")
 
     visualize_model_output(model, dataloader, device, save_path)
 

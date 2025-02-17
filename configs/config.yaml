@@ -1,6 +1,6 @@
 device: "cuda"         # 或 "cpu"
 epochs: 200
-checkpoint_path: "best_model.pth"
+checkpoint_path: "output/best_model.pth"
 lr: 0.001
 batch_size: 8
 

@@ -33,7 +33,9 @@ class BehaviourCloner:
         self.epoch_losses = []
         self.val_epoch_losses = []
         # 保存 loss 曲线的路径（可根据需要修改）
-        self.loss_plot_path = os.path.join(config.get("plots_path", "."), "loss.png")
+        plots_path = config.get("plots_path", "./output")  # 默认为 `output` 目录
+        os.makedirs(plots_path, exist_ok=True)  # 确保 `output` 目录存在
+        self.loss_plot_path = os.path.join(plots_path, "loss.png")
 
     def train(self):
         for epoch in range(self.epochs):

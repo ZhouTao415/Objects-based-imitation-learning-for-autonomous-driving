@@ -20,4 +20,6 @@ pandas
 tensorboard
 matplotlib
 transformers
+opencv-python
+
 ```
