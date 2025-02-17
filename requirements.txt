@@ -1,11 +1,7 @@
-torch
-torchvision
-torchaudio
+torch==2.1.0+cu121
 numpy
 pandas
-tensorboard
 matplotlib
-transformers
 opencv-python
 typeguard
 PyYAML

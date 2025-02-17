@@ -21,7 +21,7 @@ Run the following command to install all dependencies:
 
 ```bash
 pip install .
-```
+
 
 This will:
 - Read `requirements.txt` and install all required packages.
@@ -31,7 +31,7 @@ Alternatively, you can install dependencies manually:
 
 ```bash
 pip install -r requirements.txt
-```
+
 
 ---
 
@@ -41,14 +41,14 @@ You can visualize waypoints, and IMU data, etc. using:
 
 ```bash
 python visualization/visualize_data.py
-```
+
 
 ### **2️⃣ Training the Model**
 To train the transformer-based imitation learning model:
 
 ```bash
 python main.py
-```
+
 
 Checkpoints will be saved to the `output/` directory.
 
@@ -57,7 +57,7 @@ To visualize the model’s predictions:
 
 ```bash
 python visualization/visualize_output.py 
-```
+
 
 ---
 
@@ -99,6 +99,6 @@ Autobrains_Home_Assignment/
 └── visualization
     ├── visualize_data.py
     └── visualize_output.py
-```
+
 
 ---
