@@ -55,7 +55,7 @@ python tests/test_model.py
 To visualize the model’s predictions:
 
 ```bash
-python imitationLearning/utils/visualization/visualize_output.py
+python imitationLearning/utils/visualization/visualize_output.pypython visualization/visualize_output.py 
 ```
 
 ---

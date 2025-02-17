@@ -82,6 +82,37 @@ class BehaviourCloner:
                 val_meter.update(loss.item(), n=obj.size(0))
         print(f"Validation Loss: {val_meter.avg:.4f}")
         return val_meter.avg
+    
+    def evaluate(self, test_loader):
+        """在测试集上评估模型，并计算误差指标（MSE, RMSE, MAE）"""
+        self.model.eval()
+        waypoints_predicted = []
+        waypoints_ground_truth = []
+        
+        with torch.no_grad():
+            for batch in test_loader:
+                obj = batch['objects'].to(self.config["device"])
+                lanes = batch['lanes'].to(self.config["device"])
+                lane_mask = batch['lane_mask'].to(self.config["device"])
+                imu = batch['imu'].to(self.config["device"])
+                waypoints = batch['waypoints'].to(self.config["device"])
+
+                output = self.model(obj, lanes, lane_mask, imu)
+                waypoints_predicted.append(output.cpu().numpy())
+                waypoints_ground_truth.append(waypoints.cpu().numpy())
+        
+        # 将列表拼接成 NumPy 数组
+        waypoints_predicted = np.concatenate(waypoints_predicted, axis=0)
+        waypoints_ground_truth = np.concatenate(waypoints_ground_truth, axis=0)
+        
+        # 计算误差指标
+        mse = np.mean((waypoints_predicted - waypoints_ground_truth) ** 2)
+        rmse = np.sqrt(mse)
+        mae = np.mean(np.abs(waypoints_predicted - waypoints_ground_truth))
+        
+        print(f"Test Evaluation - MSE: {mse:.4f}, RMSE: {rmse:.4f}, MAE: {mae:.4f}")
+        return mse, rmse, mae
+
 
     def plot_loss(self):
         epochs = np.arange(1, self.epochs + 1)

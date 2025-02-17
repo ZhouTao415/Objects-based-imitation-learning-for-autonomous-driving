@@ -154,7 +154,7 @@ cython_debug/
 
 # data
 *.npy
-# *.pdf
+*.pdf
 *.zip
 
 # folders
