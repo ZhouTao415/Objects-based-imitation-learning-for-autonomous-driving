@@ -60,6 +60,7 @@ def visualize_model_output(model, dataloader, device, save_path=None):
         ax1.plot(
             waypoints_ground_truth_arr[n, :, 0],
             waypoints_ground_truth_arr[n, :, 1],
+            marker="o",
             linestyle="-",
             color="b",
             alpha=0.7,
@@ -76,6 +77,7 @@ def visualize_model_output(model, dataloader, device, save_path=None):
         ax2.plot(
             waypoints_predicted_arr[n, :, 0],
             waypoints_predicted_arr[n, :, 1],
+            marker="o",
             linestyle="--",
             color="g",
             alpha=0.7,

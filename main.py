@@ -13,7 +13,7 @@ DATA_PATH = make_abs_path(__file__, "data")
 
 
 def main():
-    config = load_config("configs/config.yaml")
+    config = load_config("configs/model.yaml")
     data_root = DATA_PATH # 确保 data/objects 与 data/waypoints 路径正确
     print(data_root)
 

@@ -1,5 +1,5 @@
 device: "cuda"           # 或 "cpu"
-checkpoint_path: "best_model.pth"
+checkpoint_path: "output/best_model.pth"
 
 # 模型相关配置
 obj_dim: 4               # 对象特征维度（例如：lat_dist, long_dist, abs_vel_x, abs_vel_z）
