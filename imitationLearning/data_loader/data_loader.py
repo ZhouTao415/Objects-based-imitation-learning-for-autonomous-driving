@@ -38,25 +38,25 @@ class DrivingDataset(Dataset):
         for seq in sequences:
             # 加载 IMU 数据
             imu_path = os.path.join(objects_dir, seq, 'imu_data.json')
-            print(f"Loading IMU data from: {imu_path}")
+            # print(f"Loading IMU data from: {imu_path}")
             with open(imu_path, 'r') as f:
                 imu_data = json.load(f)
             
             # 加载 Waypoints 数据 (形状为 [120, 4, 2])
             waypoints_path = os.path.join(data_root, 'waypoints', seq, 'waypoints.npy')
-            print(f"Loading waypoints from: {waypoints_path}")
+            # print(f"Loading waypoints from: {waypoints_path}")
             waypoints = np.load(waypoints_path)
             
             # 加载 Objects 数据
             objects_path = os.path.join(objects_dir, seq, 'cametra_interface_output.csv')
-            print(f"Loading objects from: {objects_path}")
+            # print(f"Loading objects from: {objects_path}")
             df_objects = pd.read_csv(objects_path)
             # 假设 'name' 列表示帧号
             objects_grouped = df_objects.groupby('name')
             
             # 加载 Lanes 数据
             lanes_path = os.path.join(objects_dir, seq, 'cametra_interface_lanes_output.csv')
-            print(f"Loading lanes from: {lanes_path}")
+            # print(f"Loading lanes from: {lanes_path}")
             df_lanes = pd.read_csv(lanes_path)
             lanes_grouped = df_lanes.groupby('frame_id')
             

@@ -27,12 +27,6 @@ This will:
 - Read `requirements.txt` and install all required packages.
 - Install the project as a package for easy imports.
 
-Alternatively, you can install dependencies manually:
-
-```bash
-pip install -r requirements.txt
-```
-
 ---
 
 ## 🚀 **Usage**
@@ -49,10 +43,15 @@ To train the transformer-based imitation learning model:
 ```bash
 python main.py
 ```
-
 Checkpoints will be saved to the `output/` directory.
 
-### **3️⃣ Running Ouput Visualization**
+### **3️⃣ Testing the Model**
+Once training is completed, evaluate the model’s performance using:
+```bash
+python tests/test_model.py 
+```
+
+### **4️⃣ Running Ouput Visualization**
 To visualize the model’s predictions:
 
 ```bash
@@ -89,7 +88,7 @@ Autobrains_Home_Assignment/
 ├── output
 │   ├── best_model.pth
 │   ├── loss.png
-│   └── traj  ectory_visualization.png
+│   └── trajectory_visualization.png
 ├── README.md
 ├── requirements.txt
 ├── setup.py
