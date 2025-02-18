@@ -29,9 +29,9 @@ class MLPEncoder(nn.Module):
         super(MLPEncoder, self).__init__()
         self.mlp = nn.Sequential(
             nn.Linear(input_dim, 64),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Linear(64, output_dim),
-            nn.ReLU()
+            nn.LeakyReLU()
         )
 
     def forward(self, x):

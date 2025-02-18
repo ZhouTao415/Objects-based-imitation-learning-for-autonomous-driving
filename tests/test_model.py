@@ -48,10 +48,8 @@ def test_model(model, dataloader, device):
 
     # Compute error metrics
     mse = np.mean((waypoints_predicted - waypoints_ground_truth) ** 2)
-    rmse = np.sqrt(mse)
-    mae = np.mean(np.abs(waypoints_predicted - waypoints_ground_truth))
 
-    print(f"Test Results - MSE: {mse:.4f}, RMSE: {rmse:.4f}, MAE: {mae:.4f}")
+    print(f"Test Results - MSE: {mse:.4f}")
 
     return waypoints_predicted, waypoints_ground_truth
 

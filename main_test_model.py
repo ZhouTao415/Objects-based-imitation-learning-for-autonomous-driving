@@ -27,12 +27,15 @@ def main():
     bc = BehaviourCloner(config, model, None, None, criterion, None)
 
     # Evaluate model
+    # Average Displacement Error
+    # Final Displacement Error
     test_loss = bc.evaluate(test_loader)
 
     # Convert to Python floats before printing
+
     test_loss = tuple(float(x) for x in test_loss)  
 
-    print(f"Test Loss (MSE, RMSE, MAE): {test_loss}")
+    print(f"Test Loss (ADE, FDE): {test_loss}")
 
 
 if __name__ == "__main__":

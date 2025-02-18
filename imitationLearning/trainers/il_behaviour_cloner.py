@@ -84,7 +84,7 @@ class BehaviourCloner:
         return val_meter.avg
     
     def evaluate(self, test_loader):
-        """Evaluate the model on the test set and calculate error metrics (MSE, RMSE, MAE)"""
+        """Evaluate the model on the test set and calculate error metrics (ADE, FDE)"""
         self.model.eval()
         waypoints_predicted = []
         waypoints_ground_truth = []
@@ -101,17 +101,23 @@ class BehaviourCloner:
                 waypoints_predicted.append(output.cpu().numpy())
                 waypoints_ground_truth.append(waypoints.cpu().numpy())
         
-        # Concatenate lists into NumPy arrays
+        # Concatenate the results of all batches to get an array of shape (N, T, 2)
+        # where T represents the number of time steps (e.g., 4 time steps)
         waypoints_predicted = np.concatenate(waypoints_predicted, axis=0)
         waypoints_ground_truth = np.concatenate(waypoints_ground_truth, axis=0)
         
-        # Calculate error metrics
-        mse = np.mean((waypoints_predicted - waypoints_ground_truth) ** 2)
-        rmse = np.sqrt(mse)
-        mae = np.mean(np.abs(waypoints_predicted - waypoints_ground_truth))
         
-        # print(f"Test Evaluation - MSE: {mse:.4f}, RMSE: {rmse:.4f}, MAE: {mae:.4f}")
-        return mse, rmse, mae
+        # Calculate the Euclidean distance error for each time step, shape = (N, T)
+        errors = np.linalg.norm(waypoints_predicted - waypoints_ground_truth, axis=2)
+        
+        # Average Displacement Error (ADE): the average of all time step errors
+        ade = np.mean(errors)
+        
+        # Final Displacement Error (FDE): the error at the last time step for each sample, then averaged over all samples
+        fde = np.mean(np.linalg.norm(waypoints_predicted[:, -1, :] - waypoints_ground_truth[:, -1, :], axis=1))
+        
+        # print(f"Test Evaluation - ADE: {ade:.4f}, FDE: {fde:.4f}")
+        return ade, fde
 
 
     def plot_loss(self):
