@@ -59,7 +59,7 @@ python imitationLearning/utils/visualization/visualize_output.py
 
 ---
 
-For more detailed examples and sample outputs, refer to the files in ./docs/samples/. 
+⭐ For more detailed examples and sample outputs, refer to the files in ./docs/samples/
 
 ## 📁 **Project Structure**
 
