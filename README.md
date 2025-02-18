@@ -13,7 +13,6 @@ It is recommended to use a virtual environment to manage dependencies.
 ```bash
 python -m venv aha
 source aha/bin/activate   # Linux/macOS
-aha\Scripts\activate      # Windows (use PowerShell)
 ```
 
 ### **2️⃣ Install Dependencies**
