@@ -1,13 +1,13 @@
-device: "cuda"         # 或 "cpu"
+device: "cuda"       
 epochs: 200
 checkpoint_path: "output/best_model.pth"
 lr: 0.001
 batch_size: 8
 
-# 模型相关配置
-obj_dim: 4         # 对象特征维度，例如 'lat_dist', 'long_dist', 'abs_vel_x', 'abs_vel_z'
-lane_dim: 13       # 车道数据每行的维度：one-hot (N) + 3个多项式系数；此处示例取13，可根据实际情况调整
-imu_dim: 1         # 这里简单使用 'vf' 作为 imu 特征（可扩展其他维度）
+# Model related configuration
+obj_dim: 4         # Object feature dimension, such as 'lat_dist', 'long_dist', 'abs_vel_x', 'abs_vel_z'
+lane_dim: 13       # Dimension of each row of lane data: one-hot (N) + 3 polynomial coefficients; here the example takes 13, which can be adjusted according to the actual situation
+imu_dim: 1         # Here simply use 'vf' as the imu feature (other dimensions can be extended)
 embed_dim: 32
 num_heads: 4
 ff_dim: 64

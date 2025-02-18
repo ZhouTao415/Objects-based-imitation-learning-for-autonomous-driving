@@ -16,7 +16,7 @@ def convert_tensor_to_numpy(tensor):
     return tensor.detach().cpu().numpy()
 
 def plot_ground_truth(ax, ground_truth_arr, start_idx=120, end_idx=140):
-    """绘制左上角：所有 Ground Truth 轨迹"""
+    """Plot top left: all Ground Truth trajectories"""
     end_idx = min(end_idx, ground_truth_arr.shape[0])
     for n in range(start_idx, end_idx):
         ax.plot(
@@ -33,7 +33,7 @@ def plot_ground_truth(ax, ground_truth_arr, start_idx=120, end_idx=140):
     ax.grid(True)
 
 def plot_prediction(ax, predicted_arr, start_idx=120, end_idx=140):
-    """绘制右上角：所有 Prediction 轨迹"""
+    """Plot top right: all Prediction trajectories"""
     end_idx = min(end_idx, predicted_arr.shape[0])
     for n in range(start_idx, end_idx):
         ax.plot(
@@ -50,7 +50,7 @@ def plot_prediction(ax, predicted_arr, start_idx=120, end_idx=140):
     ax.grid(True)
 
 def plot_subplots(axs, ground_truth_arr, predicted_arr, start_idx=120, end_idx=140, num_plots=5):
-    """绘制左下角：5个小 subplot，分别展示单个样本的预测与真实轨迹对比"""
+    """Plot bottom left: 5 small subplots, each showing a single sample's prediction vs ground truth"""
     end_idx = min(end_idx, ground_truth_arr.shape[0])
     selected_indices = np.linspace(start_idx, end_idx - 1, num=num_plots, dtype=int)
     for i, (ax, idx) in enumerate(zip(axs, selected_indices)):
@@ -77,7 +77,7 @@ def plot_subplots(axs, ground_truth_arr, predicted_arr, start_idx=120, end_idx=1
     axs[0].legend()
 
 def plot_cumulative(ax, ground_truth_arr, predicted_arr):
-    """绘制右下角：累积轨迹对比"""
+    """Plot bottom right: cumulative trajectory comparison"""
     gt = np.reshape(ground_truth_arr, (-1, 2))
     pred = np.reshape(predicted_arr, (-1, 2))
     ax.plot(
@@ -102,8 +102,8 @@ def plot_cumulative(ax, ground_truth_arr, predicted_arr):
 
 def visualize_model_output(model, dataloader, device, save_path=None):
     """
-    读取数据、运行模型，并绘制所有样本的 Waypoints 轨迹，
-    使用 2x2 的 subplot 布局展示各个角度的对比。
+    Load data, run the model, and plot the Waypoints trajectories for all samples,
+    using a 2x2 subplot layout to show comparisons from different angles.
     """
     model.to(device)
     model.eval()
@@ -117,7 +117,7 @@ def visualize_model_output(model, dataloader, device, save_path=None):
             lane_mask = batch['lane_mask'].to(device)
             imu = batch['imu'].to(device)
             waypoints = batch['waypoints'].to(device)
-            output = model(obj, lanes, lane_mask, imu)  # 输出 shape (B, 4, 2)
+            output = model(obj, lanes, lane_mask, imu)  # Output shape (B, 4, 2)
             waypoints_predicted.append(convert_tensor_to_numpy(output))
             waypoints_ground_truth.append(convert_tensor_to_numpy(waypoints))
     
@@ -129,26 +129,26 @@ def visualize_model_output(model, dataloader, device, save_path=None):
     waypoints_ground_truth_arr = np.concatenate(waypoints_ground_truth, axis=0)  # shape (N, 4, 2)
     print("waypoints_ground_truth_arr shape:", waypoints_ground_truth_arr.shape)
 
-    # ======== 创建 GridSpec 布局 ========
+    # ======== Create GridSpec layout ========
     fig = plt.figure(figsize=(15, 12))
     gs = gridspec.GridSpec(2, 2, figure=fig, height_ratios=[1, 1.5])
 
-    ax1 = fig.add_subplot(gs[0, 0])  # 左上角：Ground Truth
-    ax2 = fig.add_subplot(gs[0, 1])  # 右上角：Prediction
-    ax4 = fig.add_subplot(gs[1, 1])  # 右下角：Cumulative Trajectory
+    ax1 = fig.add_subplot(gs[0, 0])  # Top left: Ground Truth
+    ax2 = fig.add_subplot(gs[0, 1])  # Top right: Prediction
+    ax4 = fig.add_subplot(gs[1, 1])  # Bottom right: Cumulative Trajectory
 
-    # 调用单独函数绘制各个部分
+    # Call individual functions to plot each part
     plot_ground_truth(ax1, waypoints_ground_truth_arr)
     plot_prediction(ax2, waypoints_predicted_arr)
 
-    # 细分左下角为 5 个子图
+    # Subdivide bottom left into 5 subplots
     gs2 = gridspec.GridSpecFromSubplotSpec(1, 5, subplot_spec=gs[1, 0])
     small_axes = [fig.add_subplot(gs2[0, i]) for i in range(5)]
     plot_subplots(small_axes, waypoints_ground_truth_arr, waypoints_predicted_arr)
 
     plot_cumulative(ax4, waypoints_ground_truth_arr, waypoints_predicted_arr)
 
-    # 保存图片（如果提供路径）
+    # Save the plot (if a path is provided)
     if save_path:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path)
@@ -189,7 +189,7 @@ def main():
 
     model = load_model(config)
 
-    # 读取 plots_path，默认保存到当前目录
+    # Read plots_path, default to current directory
     plots_path = config.get("plots_path", "./output")
     os.makedirs(plots_path, exist_ok=True)
     save_path = os.path.join(plots_path, "waypoints_visualization.png")

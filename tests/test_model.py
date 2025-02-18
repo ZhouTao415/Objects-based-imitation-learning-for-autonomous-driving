@@ -76,7 +76,7 @@ def main():
     # Run inference and compute error metrics
     waypoints_predicted, waypoints_ground_truth = test_model(model, test_loader, device)
     
-    # 调用 visualize_output.py 中的可视化函数展示预测结果和真实轨迹
+    # Call the visualization function from visualize_output.py to display the prediction results and the actual trajectory
     visualize_model_output(model, test_loader, device)
 
 if __name__ == "__main__":

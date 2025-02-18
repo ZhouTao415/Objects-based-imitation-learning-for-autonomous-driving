@@ -14,30 +14,30 @@ OUTPUT_PATH = make_abs_path(__file__, "../../../output")
 
 def visualize_waypoints(scene: str, fig, gs) -> None:
     """
-    读取 `waypoints.npy` 并绘制：
+    Read `waypoints.npy` and plot:
     - `ax_main` (0,1) : **Overall Trajectory**
-    - `small_axes` (1,0) : **10 个小 subplot，分别显示 10 个 `waypoints`**
+    - `small_axes` (1,0) : **10 small subplots, each showing 10 `waypoints`**
     - `ax_cumulative` (1,1) : **Cumulative Trajectory**
     
     Args:
-        scene (str): 场景名称
-        fig (matplotlib.figure): 画布
-        gs (gridspec.GridSpec): `GridSpec` 结构
+        scene (str): Scene name
+        fig (matplotlib.figure): Figure
+        gs (gridspec.GridSpec): `GridSpec` structure
     """
     waypoints_file = os.path.join(WAYPOINTS_PATH, scene, "waypoints.npy")
     waypoints = np.load(waypoints_file, allow_pickle=True)
     
-    print(f"Scene: {scene}, Waypoints shape:", waypoints.shape)  # 调试信息
+    print(f"Scene: {scene}, Waypoints shape:", waypoints.shape)  # Debug information
 
-    # ======== 创建 `subplot` ========
-    ax_overall = fig.add_subplot(gs[0, 1])  # 右上角 Overall Trajectory
-    ax_cumulative = fig.add_subplot(gs[1, 1])  # 右下角 Cumulative
+    # ======== Create `subplot` ========
+    ax_overall = fig.add_subplot(gs[0, 1])  # Top right Overall Trajectory
+    ax_cumulative = fig.add_subplot(gs[1, 1])  # Bottom right Cumulative
 
-    # 细分 (1,0) 为 10 个小 `subplot`
+    # Subdivide (1,0) into 10 small `subplot`
     gs_small = gridspec.GridSpecFromSubplotSpec(2, 5, subplot_spec=gs[1, 0])  
-    small_axes = [fig.add_subplot(gs_small[i // 5, i % 5]) for i in range(10)]  # 2行5列
+    small_axes = [fig.add_subplot(gs_small[i // 5, i % 5]) for i in range(10)]  # 2 rows 5 columns
 
-    # ======== 1. 在 `ax_overall` 绘制 Overall Trajectory ========
+    # ======== 1. Plot Overall Trajectory in `ax_overall` ========
     for n in range(min(20, waypoints.shape[0])):
         ax_overall.plot(
             waypoints[n, :, 0],
@@ -51,10 +51,10 @@ def visualize_waypoints(scene: str, fig, gs) -> None:
     ax_overall.set_xlabel("Lateral Distance")
     ax_overall.grid(True)
 
-    # ======== 2. 在 `small_axes` 绘制 10 个样本 Waypoints ========
+    # ======== 2. Plot 10 sample Waypoints in `small_axes` ========
     for i, ax in enumerate(small_axes):
         if i >= waypoints.shape[0]:  
-            break  # 避免超出数据范围
+            break  # Avoid exceeding data range
 
         ax.plot(
             waypoints[i, :, 0],
@@ -68,9 +68,9 @@ def visualize_waypoints(scene: str, fig, gs) -> None:
         ax.set_ylabel("Long Dist")
         ax.grid(True)
 
-    small_axes[0].legend()  # 仅第一个子图显示 legend
+    small_axes[0].legend()  # Only the first subplot shows the legend
 
-    # ======== 3. 在 `ax_cumulative` 绘制 Cumulative Trajectory ========
+    # ======== 3. Plot Cumulative Trajectory in `ax_cumulative` ========
     waypoints_flat = np.reshape(waypoints, (-1, 2))  # (N*T, 2)
     
     ax_cumulative.plot(
@@ -112,19 +112,19 @@ def visualize_imu(scene: str, ax) -> None:
 
 def main():
     """
-    主程序：可视化
-      - Waypoints 轨迹
-      - IMU 速度数据
+    Main program: Visualization
+      - Waypoints trajectory
+      - IMU speed data
     """
     
-    # 创建 output 目录
+    # Create output directory
     output_dir = OUTPUT_PATH
-    os.makedirs(output_dir, exist_ok=True)  # 确保 output 目录存在
+    os.makedirs(output_dir, exist_ok=True)  # Ensure output directory exists
     if not os.path.exists(output_dir):
         print(f"Error: Output directory {output_dir} was not created successfully!")
 
     
-    # 获取所有场景
+    # Get all scenes
     scenes = os.listdir(WAYPOINTS_PATH)
     if not scenes:
         print("No scenes found in the waypoints directory!")
@@ -133,23 +133,23 @@ def main():
     for scene in scenes:
         print(f"Visualizing scene: {scene}")
 
-        # ======== 1. 创建 `GridSpec` 布局 ========
+        # ======== 1. Create `GridSpec` layout ========
         fig = plt.figure(figsize=(15, 12))
-        gs = gridspec.GridSpec(2, 2, figure=fig, height_ratios=[1, 1.5])  # 增加第二行空间
+        gs = gridspec.GridSpec(2, 2, figure=fig, height_ratios=[1, 1.5])  # Increase space for the second row
 
-        ax_imu = fig.add_subplot(gs[0, 0])  # 左上角 IMU Speed
+        ax_imu = fig.add_subplot(gs[0, 0])  # Top left IMU Speed
 
-        # ======== 2. 可视化 `waypoints` 和 `imu` ========
+        # ======== 2. Visualize `waypoints` and `imu` ========
         visualize_waypoints(scene, fig, gs)
         visualize_imu(scene, ax_imu)
 
 
-        # ======== 3. 保存图片到 `output` 目录 ========
+        # ======== 3. Save image to `output` directory ========
         save_path = os.path.join(output_dir, f"{scene}_visualization.png")
-        plt.savefig(save_path, dpi=300)  # 高分辨率保存
+        plt.savefig(save_path, dpi=300)  # Save with high resolution
         print(f"Saved visualization: {save_path}")
 
-        # 调整布局 & 显示
+        # Adjust layout & display
         plt.tight_layout()
         plt.show()
 

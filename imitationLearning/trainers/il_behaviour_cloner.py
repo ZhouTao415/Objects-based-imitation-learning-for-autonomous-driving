@@ -29,12 +29,12 @@ class BehaviourCloner:
         self.best_loss = float("inf")
         self.epochs = config["epochs"]
 
-        # 用于记录每个 epoch 的训练和验证 loss，用于后续绘图
+        # Used to record the training and validation loss of each epoch for subsequent plotting
         self.epoch_losses = []
         self.val_epoch_losses = []
-        # 保存 loss 曲线的路径（可根据需要修改）
-        plots_path = config.get("plots_path", "./output")  # 默认为 `output` 目录
-        os.makedirs(plots_path, exist_ok=True)  # 确保 `output` 目录存在
+        # Path to save the loss curve (can be modified as needed)
+        plots_path = config.get("plots_path", "./output")  # Default to `output` directory
+        os.makedirs(plots_path, exist_ok=True)  # Ensure `output` directory exists
         self.loss_plot_path = os.path.join(plots_path, "loss.png")
 
     def train(self):
@@ -64,7 +64,7 @@ class BehaviourCloner:
                 torch.save(self.model.state_dict(), self.config["checkpoint_path"])
                 print("Model saved!")
 
-        # 训练结束后进行 loss 曲线绘制
+        # Plot the loss curve after training
         self.plot_loss()
 
     def validate(self):
@@ -84,7 +84,7 @@ class BehaviourCloner:
         return val_meter.avg
     
     def evaluate(self, test_loader):
-        """在测试集上评估模型，并计算误差指标（MSE, RMSE, MAE）"""
+        """Evaluate the model on the test set and calculate error metrics (MSE, RMSE, MAE)"""
         self.model.eval()
         waypoints_predicted = []
         waypoints_ground_truth = []
@@ -101,16 +101,16 @@ class BehaviourCloner:
                 waypoints_predicted.append(output.cpu().numpy())
                 waypoints_ground_truth.append(waypoints.cpu().numpy())
         
-        # 将列表拼接成 NumPy 数组
+        # Concatenate lists into NumPy arrays
         waypoints_predicted = np.concatenate(waypoints_predicted, axis=0)
         waypoints_ground_truth = np.concatenate(waypoints_ground_truth, axis=0)
         
-        # 计算误差指标
+        # Calculate error metrics
         mse = np.mean((waypoints_predicted - waypoints_ground_truth) ** 2)
         rmse = np.sqrt(mse)
         mae = np.mean(np.abs(waypoints_predicted - waypoints_ground_truth))
         
-        print(f"Test Evaluation - MSE: {mse:.4f}, RMSE: {rmse:.4f}, MAE: {mae:.4f}")
+        # print(f"Test Evaluation - MSE: {mse:.4f}, RMSE: {rmse:.4f}, MAE: {mae:.4f}")
         return mse, rmse, mae
 
 
