@@ -48,14 +48,14 @@ Checkpoints will be saved to the `output/` directory.
 ### **3️⃣ Testing the Model**
 Once training is completed, evaluate the model’s performance using:
 ```bash
-python tests/test_model.py 
+python main_test_model.py
 ```
 
 ### **4️⃣ Running Ouput Visualization**
 To visualize the model’s predictions:
 
 ```bash
-python imitationLearning/utils/visualization/visualize_output.pypython visualization/visualize_output.py 
+python imitationLearning/utils/visualization/visualize_output.py
 ```
 
 ---
