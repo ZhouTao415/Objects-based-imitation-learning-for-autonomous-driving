@@ -1,11 +1,32 @@
 import torch
 import torch.nn as nn
+import math
+
+def get_sin_positional_encoding(max_seq_len, embed_dim, device=torch.device('cpu')):
+    """
+    Generate fixed sinusoidal positional encoding with shape (1, max_seq_len, embed_dim)
+
+    Args:
+        max_seq_len (int): Maximum length of the sequence
+        embed_dim (int): Dimension of the positional encoding
+        device (torch.device): Device to generate the tensor on
+
+    Returns:
+        torch.Tensor: Positional encoding with shape (1, max_seq_len, embed_dim)
+    """
+    pe = torch.zeros(max_seq_len, embed_dim, device=device)
+    position = torch.arange(0, max_seq_len, dtype=torch.float, device=device).unsqueeze(1)
+    div_term = torch.exp(torch.arange(0, embed_dim, 2, dtype=torch.float, device=device) * (-math.log(10000.0) / embed_dim))
+    pe[:, 0::2] = torch.sin(position * div_term)
+    pe[:, 1::2] = torch.cos(position * div_term)
+    return pe.unsqueeze(0)  # (1, max_seq_len, embed_dim)
 
 # Transformer Encoder, used to process variable-length Objects data
 class TransformerEncoder(nn.Module):
-    def __init__(self, input_dim, embed_dim, num_heads, ff_dim, num_layers):
+    def __init__(self, input_dim, embed_dim, num_heads, ff_dim, num_layers, max_seq_len = 100):
         super(TransformerEncoder, self).__init__()
         self.embedding = nn.Linear(input_dim, embed_dim)
+        self.register_buffer('positional_encoding', get_sin_positional_encoding(max_seq_len, embed_dim).detach())
         # Use batch_first=True, directly pass in (B, L, embed_dim)
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=embed_dim,
@@ -16,10 +37,15 @@ class TransformerEncoder(nn.Module):
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
     def forward(self, x):
+        # x: (B, L, input_dim)
+        B, L, _ = x.size()
         if x.size(1) == 0:
-            return torch.zeros(x.size(0), self.embedding.out_features, device=x.device)
+            return torch.zeros(B, self.embedding.out_features, device=x.device)
         # x: (B, L, input_dim)
         x = self.embedding(x)            # (B, L, embed_dim)
+        # Add positional encoding
+        pos_enc = self.positional_encoding[:, :L, :].to(x.device)
+        x = x + pos_enc
         x = self.transformer(x)          # (B, L, embed_dim)
         return x.mean(dim=1)             # Pool to (B, embed_dim)
 
@@ -39,9 +65,10 @@ class MLPEncoder(nn.Module):
 
 # Lane Encoder: Use Transformer to aggregate lane data
 class LaneEncoder(nn.Module):
-    def __init__(self, input_dim, embed_dim, num_heads=2, ff_dim=64, num_layers=1):
+    def __init__(self, input_dim, embed_dim, num_heads=2, ff_dim=64, num_layers=1, max_seq_len = 100):
         super(LaneEncoder, self).__init__()
         self.embedding = nn.Linear(input_dim, embed_dim)
+        self.register_buffer('positional_encoding', get_sin_positional_encoding(max_seq_len, embed_dim).detach())
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=embed_dim,
             nhead=num_heads,
@@ -52,8 +79,12 @@ class LaneEncoder(nn.Module):
 
     def forward(self, x, mask):
         # x: (B, L_lane, lane_dim)
+        B, L, _ = x.size()
         # mask: (B, L_lane) boolean, True indicates valid data
         x = self.embedding(x)         # (B, L_lane, embed_dim)
+        # Add positional encoding
+        pos_enc = self.positional_encoding[:, :L, :].to(x.device)
+        x = x + pos_enc
         # Transformer src_key_padding_mask requires True to indicate items to be ignored (padding),
         # so pass in ~mask (assuming mask True indicates valid data)
         key_padding_mask = ~mask

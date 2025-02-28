@@ -175,7 +175,7 @@ def load_model(config):
         raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
 
     state_dict = torch.load(checkpoint_path, map_location=config["device"], weights_only=True)
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict=False)
 
     return model
 
