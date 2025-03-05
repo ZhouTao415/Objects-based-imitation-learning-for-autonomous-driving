@@ -63,34 +63,9 @@ python imitationLearning/utils/visualization/visualize_output.py
 
 ## 📁 **Project Structure**
 
-```
-Autobrains_Home_Assignment/
-├── configs
-├── data
-│   ├── images
-│   │   ├── 1690794336000052_20230731090536-00-00
-│   │   └── 1692632429000129_20230821154029-00-00
-│   ├── objects
-│   │   ├── 1690794336000052_20230731090536-00-00
-│   │   └── 1692632429000129_20230821154029-00-00
-│   └── waypoints
-│       ├── 1690794336000052_20230731090536-00-00
-│       └── 1692632429000129_20230821154029-00-00
-├── docs
-│   └── samples
-├── imitationLearning
-│   ├── data_loader
-│   ├── models
-│   ├── trainers
-│   └── utils
-│       └── visualization
-├── output
-└── tests
 
 ```
-
-```
-Autobrains_Home_Assignment/
+Objects-based-imitation-learning-for-autonomous-driving/
 ├── configs
 │   ├── model.yaml
 │   └── visualization.yaml
