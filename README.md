@@ -1,6 +1,6 @@
-# Autobrains Home Assignment 🚗💡
+# Objects-based-imitation-learning-for-autonomous-driving 🚗💡
 
-This repository contains the implementation for the Autobrains home assignment. It includes data processing, visualization, and a transformer-based imitation learning model.
+This repository contains the implementation of an object-based imitation learning approach that utilizes an RNN-based method to predict future waypoints by leveraging object data, lane data, and IMU data. It includes modules for data processing, visualization, and a transformer-based imitation learning model.
 
 ---
 
